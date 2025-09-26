@@ -31,7 +31,8 @@ def main() -> None:
         guild = player.get("guild")
         if guild and guild.get("name"):
             guild_obj, _ = Guild.objects.get_or_create(
-                name=guild["name"], description=guild.get("description")
+                name=guild["name"],
+                defaults={"description": guild.get("description")}
             )
 
         if all((
