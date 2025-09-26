@@ -11,21 +11,21 @@ def main() -> None:
     for nick, player in players.items():
         race = player.get("race")
         race_obj = None
-        if race and race.get("name") and race.get("description"):
+        if race and race.get("name"):
             race_obj, _ = Race.objects.get_or_create(
                 name=race["name"],
-                description=race["description"]
+                defaults={"description": race.get("description", "")}
             )
 
-            skills = race.get("skills")
-            if skills:
-                for skill in skills:
-                    if skill.get("name") and skill.get("bonus"):
-                        Skill.objects.get_or_create(
-                            name=skill["name"],
-                            bonus=skill["bonus"],
-                            race=race_obj
-                        )
+            for skill in race.get("skills") or []:
+                if skill.get("name") and skill.get("bonus") and race_obj:
+                    Skill.objects.get_or_create(
+                        name=skill["name"],
+                        defaults={
+                        "bonus": skill["bonus"],
+                        "race": race_obj
+                        }
+                    )
 
         guild_obj = None
         guild = player.get("guild")
@@ -34,13 +34,21 @@ def main() -> None:
                 name=guild["name"], description=guild.get("description")
             )
 
-        Player.objects.get_or_create(
-            nickname=nick,
-            email=player.get("email"),
-            bio=player.get("bio"),
-            race=race_obj,
-            guild=guild_obj
-        )
+        if all((
+            nick,
+            player.get("email"),
+            player.get("bio"),
+            race_obj
+        )):
+            Player.objects.get_or_create(
+                nickname=nick,
+                defaults={
+                "email": player["email"],
+                "bio": player["bio"],
+                "race": race_obj,
+                "guild": guild_obj
+                }
+            )
 
 
 if __name__ == "__main__":
